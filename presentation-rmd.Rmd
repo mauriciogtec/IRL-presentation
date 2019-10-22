@@ -1,0 +1,103 @@
+---
+output:
+  revealjs::revealjs_presentation:
+    theme: league
+    highlight: pygments
+    center: false
+    transition: fade
+---
+
+# Advancements in Inverse Reinforcement Learning
+
+Mauricio Garcia Tec
+
+October 2019
+
+The University of Texas at Austin
+
+
+---
+
+
+## Notation
+
+- $\mathcal{S}$: state space
+- $\mathcal{A}$: action pace
+- $p$: real data distribution
+- $\pi(a \mid s)$: policy function
+- $\gamma$: time-discount factor
+- $r$: reward function
+- $\tau=(s_0, a_0, ..., s_T, a_T)$: a trajectory
+- $\mathcal{D}=(\tau_1,...,\tau_N)$: a dataset of experts demonstrations
+
+
+---
+
+## Background
+
+Most of recent works focus on 
+
+xx
+---
+
+## Paper 1: GAN-GCL (GAN guided cost learning)
+
+Finn, C., Christiano, P., Abbeel, P., & Levine, S. (2016). A connection between generative adversarial networks, inverse reinforcement learning, and energy-based models. In: NeurIPS 2016.
+
+---
+
+## IRL Problem
+
+We can interpret it as a maximum likelihood problem
+
+$$
+\max_\theta \; \mathbb{E}_{\tau \in \mathcal{D}}\left[\log p_\theta(\tau)\right]
+$$
+
+where $p_\theta(\tau)=\frac{1}{Z}\exp(-c_\theta(\tau))$ is parametrized by the **Boltzmann distribution**.
+
+<!-- $$
+\begin{aligned}
+p_\theta(\tau) \propto\, & p(s_0)\prod_{t=0}^T p(s_{t+1} \mid s_t, a_t)\exp\left\{\gamma^t r_\theta(s_t, a_t)\right\} \\
+= &\exp \left\{\log p(s_0) + \sum_{t+1}^T \left[\log p(s_{t+1}\mid s_t, a_t) + 
+\gamma^tr_\theta(s_t, a_t)\right]\right\} = \exp(-c_\theta(\tau)))
+\end{aligned}
+$$ -->
+
+
+
+
+---
+
+Typical problem with Boltzmann distribution is estimating the partition function $Z$. Suppose we can sample from another policy $q$ different from the true data distribution $p$. Then
+$$
+Z= \int \exp(-c_\theta(\tau)) d\tau=\int \exp(-c_\theta(\tau)\frac{q(\tau)}{q(\tau)} d\tau = \mathbb{E}_{\tau \sim q} \left[ \frac{\exp(-c_\theta(\tau))}{q(\tau)} \right]
+$$
+Then we have a loss function
+$$
+\begin{aligned}
+l(\theta) & = \mathbb{E}_{\tau\sim p}[-\log p_\theta(\tau)] \\
+    & = \mathbb{E}_{\tau \sim p}[c_\theta(\tau)]  + \log Z \\
+    & = \mathbb{E}_{\tau \sim p}[c_\theta(\tau)] +  \log \mathbb{E}_{\tau \sim q} \left[ \frac{\exp(-c_\theta(\tau))}{q(\tau)} \right]
+\end{aligned}
+$$
+
+---
+
+## Adversarial Inverse Reinforcement Learning (AIRL)
+
+Fu, J., Luo, K., and Levine, S. 2018. *Learning Robust Rewards with Adverserial Inv
+
+
+
+---
+
+### References
+
+
+- Finn, C., Christiano, P., Abbeel, P., & Levine, S. (2016). A connection between generative adversarial networks, inverse reinforcement learning, and energy-based models. In: NeurIPS.
+
+- Fu, J., Luo, K., & Levine, S. (2018). *Learning Robust Rewards with Adverserial Inverse Reinforcement Learning.* In: ICLR.
+
+- Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., & Bengio, Y. (2014). Generative adversarial nets. In: NeurIPS.
+
