@@ -28,13 +28,24 @@ The University of Texas at Austin
 
 ---
 
-## Background 
+## Background: MaxEnt RL
 
 In the MaxEnt framework (Todorov, 2008) of RL, the goal is to find a policy $\pi$ such that trajectories sampled follow a distribution
 
 $$
 p(\tau) = \frac{1}{Z} \exp R(\tau)
 $$
+
+for $\tau=((s_0, a_0), ..., (s_T, a_T))$. 
+
+<!-- Ziebert (2010) shows that optimal policy satistifes
+$$
+\log \pi^*(a_t\mid s_t) = r(s_t, a_t) + \mathbb{E}_\pi\left[\sum_j r(s_{t +j}, a_{t+j})\right]
+$$ -->
+
+---
+
+## Background: MaxEnt IRL
 
 where $R(\tau):=\sum_t r(s_t, a_t)$. The function $r$ is assumed to be determinisitic. Conversely, in inverse RL (within MaxEnt framework) we are presented an experts' policy $\pi^{(e)}$ and want to solve
 
@@ -113,7 +124,7 @@ D^*(\tau) = \frac{p(\tau)}{p(\tau) + \pi(\tau)}
 $$
 where $p(\tau)$ is the actual distribution of the data. 
 
-Moreover, the global minumum of $D_*(\tau)$ is obtained when $\pi \equiv p$,at which the discriminator gives equal probability to fake and generated data.
+Moreover, the global minumum of $D_*(\tau)$ is obtained when $\pi \equiv p$, at which the discriminator gives equal probability to fake and generated data.
 
 ---
 
@@ -129,12 +140,12 @@ at optimality, $p_\theta(\tau)=\frac{1}{Z}\exp(-c_\theta(\tau)) = p(\tau)$.
 
 ## Cost-guided GANs solve IRL
 
-Here is another trick. Let $\mu$ be a mixture of the data and policy samples $\mu(\tau) = \frac{1}{2}(p(\tau) + \pi(\tau))$. This $\mu$ can be used for the importace sampling estimate:
+Here is another trick. Let $\mu$ be a mixture of the data and policy samples $\mu(\tau) = \frac{1}{2}(p(\tau) + \pi(\tau))$. This $\mu$ can be used for the importance sampling estimate:
 
-The authors prove three foundational results:
+The authors prove three key results:
 
 1. The value of $Z$ which minimizes $\mathcal{L}_\text{discriminator}$ is the importance sampling estimate of $Z$ using $\mu$.
-2. For this value of $Z$ the derivative, $\partial_\theta \mathcal{L}_\text{discriminator} = \partial_\theta \mathcal{L}_\text{IRL}$. Thus the discriminator optimizes $\mathcal{L}_\text{IRL}$.
+2. For this value of $Z$ we have $\partial_\theta \mathcal{L}_\text{discriminator} = \partial_\theta \mathcal{L}_\text{IRL}$. Thus the discriminator optimizes $\mathcal{L}_\text{IRL}$.
 3. The generator's loss satisfies $\mathcal{L}_\text{generator}(\pi) = \log Z + \mathcal{L}_\text{sampler}(\pi)$.
 
 
@@ -143,8 +154,8 @@ The authors prove three foundational results:
 ## Conclusion
 
 - Using GAN is equivalent to IRL on trajectories
-- Putting a special structure on the discriminator can be used to estimate the expert's policy $p(\tau)$, which in turns gives an estimate of the cost/reward of trajectory
-- No examples given by the authors. Why can that be?
+- Putting a special structure on the discriminator can be used to estimate the experts' reward function $R_\theta(\tau) = -c_\theta(\tau)$ of a trajectory, which in turns gives an estimate of the experts' policy
+- No experiments given by the authors.
 
 ---
 
@@ -174,9 +185,9 @@ D_\theta(s, a)  =
 \frac{\exp(f_\theta(s, a))}{\exp(f_\theta(s, a)) + \pi(a\mid s)}
 $$
 
-- $f_\theta$ serves the experts reward function
-- What would happen at optmality?
-- Was $\frac{1}{Z}$ necessary, it got out of the picture.
+- $f_\theta$ serves as the experts' reward function
+- What would happen at optimality?
+- Turns out that having $\frac{1}{Z}$ is not really necessary in the GAN framework
 
 ---
 
@@ -246,6 +257,7 @@ where
 $$
 f_{\theta, \phi}(s,a,s') = g_\theta(s,a) + h_\phi(s') - h_\phi(s)
 $$
+**BONUS**. Can parametrize $g_\theta=g_\theta(s)$ as a function of the state only which according to theorems should be better.
 
 ---
 
@@ -289,6 +301,42 @@ Peng, X. B., Kanazawa, A., Toyer, S., Abbeel, P., & Levine, S. (2019). Variation
 
 ---
 
+## Replace with encodings
+
+
+Introduce stochastic encoders $q_g(z_g \mid s)$, $q_h(z_h \mid s)$ and replace each element in the discriminator with variational encoded versions
+- $g_\theta(s) \to g_\theta(z_g)$
+- $h_\phi(s) \to h_\phi(z_h)$
+
+So the new discriminator is
+$$
+D(s,a,z) = \frac{\exp{f_{\theta,\phi}(z_g,z_h,z_h')}}{\exp f_{\theta,\phi}(z_g,z_h,z_h') + \pi(a\mid s)}
+$$
+with $f_{\theta,\phi}(z_g,z_h,z_h')=g_\phi(z_g) + h_\phi(z_h') - h_\phi(z_h)$.
+
+---
+
+## The new discriminator loss
+
+With the information bottleneck approach, the new discriminator will be
+$$
+\begin{aligned}
+\mathcal{L}_\text{discriminator}(\theta,\phi) &= \min_{\theta, \phi, (\beta \geq 0)} \mathbb{E}_{s,s'\sim p}\left[ \mathbb{E}_{z\sim q(z\mid s,s')} \left[ -\log D_{\theta,\phi}(s,a,z) \right] \right] \\
+& \quad\quad + \mathbb{E}_{s,s'\sim \pi}\left[ \mathbb{E}_{z\sim q(z\mid s,s')} \left[ -\log (1 - D_{\theta,\phi}(s,a,z)) \right] \right] \\
+& \quad\quad + \beta \left[I_c - \mathbb{E}_{s,s'\sim \mu}[\mathrm{KL}[q(z\mid s, s') \,\Vert\,r(z)
+] \right].
+\end{aligned}
+$$
+where $q$ is the joint variational distribution $q(z_g,z_h\mid s)=q_g(z_g \mid s)q_h(z_h\mid s)$.
+
+We will explain the term the bottleneck term.
+
+---
+
+## Demonstration
+
+https://xbpeng.github.io/projects/VDB/
+
 
 ---
 
@@ -302,3 +350,4 @@ Peng, X. B., Kanazawa, A., Toyer, S., Abbeel, P., & Levine, S. (2019). Variation
 
 - Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., & Bengio, Y. (2014). Generative adversarial nets. In: NeurIPS.
 
+- Peng, X. B., Kanazawa, A., Toyer, S., Abbeel, P., & Levine, S. (2019). Variational discriminator bottleneck: Improving imitation learning, inverse rl, and gans by constraining information flow. In: ICLR.
