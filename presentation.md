@@ -2,7 +2,7 @@
 marp: true
 ---
 
-# Advancements in Inverse Reinforcement Learning
+# SOTA in Inverse Reinforcement Learning
 
 Mauricio Garcia Tec
 
