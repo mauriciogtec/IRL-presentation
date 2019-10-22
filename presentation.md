@@ -16,19 +16,16 @@ The University of Texas at Austin
 
 ## Notation
 
-- $\mathcal{S}$: state space
-- $\mathcal{A}$: action pace
 - $r$: reward function
 - $\pi(a \mid s)$: policy function
-- $p(\tau)$: true (experts') induced distribution over trajectories
+- $p$: true data distribution
 - $\tau=((s_0, a_0), ..., (s_T, a_T))$: a trajectory of state-action pairs
-- $\mathcal{D}=(\tau_1,...,\tau_N)$: a dataset of experts' demonstrations
 
 <!-- - $\gamma$: time-discount factor -->
 
 ---
 
-## Background: MaxEnt RL
+## Recall: MaxEnt RL
 
 In the MaxEnt framework (Todorov, 2008) of RL, the goal is to find a policy $\pi$ such that trajectories sampled follow a distribution
 
@@ -45,7 +42,7 @@ $$ -->
 
 ---
 
-## Background: MaxEnt IRL
+## Recall: MaxEnt IRL
 
 where $R(\tau):=\sum_t r(s_t, a_t)$. The function $r$ is assumed to be determinisitic. Conversely, in inverse RL (within MaxEnt framework) we are presented an experts' policy $\pi^{(e)}$ and want to solve
 
@@ -314,6 +311,37 @@ D(s,a,z) = \frac{\exp{f_{\theta,\phi}(z_g,z_h,z_h')}}{\exp f_{\theta,\phi}(z_g,z
 $$
 with $f_{\theta,\phi}(z_g,z_h,z_h')=g_\phi(z_g) + h_\phi(z_h') - h_\phi(z_h)$.
 
+
+---
+
+## Idea of information bottleneck
+
+A quick detour... The information bottleneck problem is a constrained optimization problem. Given:
+- data $X$
+- variational encoding $Z$ with density $q(Z\mid X)$
+- a loss function $l_\theta (Z)$
+
+The Information bottleneck problem is
+$$
+\begin{aligned}
+\min_\theta  \;\;&\mathbb{E}_{Z \sim q(Z\mid X)}[l_\theta(Z)] \\
+\text{s.t.}   \;\;& I(X, Z) \leq I_C
+\end{aligned}
+$$
+
+---
+
+## Variational lower bound for information
+
+Since mutual information is hard we use variational lower bound
+
+$$
+I(X, Z) = \int p(x,z)\log\frac{p(x, z)}{p(x)p(z)}dxdz \leq E_{X \sim p(X)}[KL[q(Z\mid X) \,\Vert\, r(Z)]]
+$$
+where $r(Z)$ is any (good) approximation to the marginal $p(Z)$. 
+
+*Want demonstration? Key:* $KL[p(Z)\,\Vert\,r(Z)] \geq 0$
+
 ---
 
 ## The new discriminator loss
@@ -331,11 +359,15 @@ where $q$ is the joint variational distribution $q(z_g,z_h\mid s)=q_g(z_g \mid s
 
 We will explain the term the bottleneck term.
 
+
 ---
 
-## Demonstration
 
-https://xbpeng.github.io/projects/VDB/
+## Results
+
+
+- [benchmark in maze task](https://mauriciogtec.github.io/IRL-presentation/img/benchmarks_vairl.png)
+- [video demonstration](https://xbpeng.github.io/projects/VDB/)
 
 
 ---
